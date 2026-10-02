@@ -55,6 +55,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23"
+          cache-dependency-path: backend/go.sum
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -62,27 +63,39 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: build backend binaries
+        # Built once, run directly (not through `go run`) so the PID
+        # captured by `$!` below is the real server process, not a `go run`
+        # wrapper; the first version of this job backgrounded `go run`
+        # directly and the kill step that was meant to free port 8081
+        # before Playwright started its own server silently missed the
+        # wrapper's child, so Playwright found the port still bound.
+        run: |
+          cd backend
+          go build -o /tmp/dstc-server ./cmd/server
+          go build -o /tmp/dstc-indexer ./cmd/indexer
+          go build -o /tmp/dstc-bypassaudit ./cmd/bypassaudit
+
       - name: generate a small corpus and index it
         run: |
           python3 data/gen/generate_documents.py 20000 /tmp/documents.ndjson
-          cd backend && go run ./cmd/indexer /tmp/documents.ndjson http://localhost:9200
+          /tmp/dstc-indexer /tmp/documents.ndjson http://localhost:9200
 
       - name: start the backend for the bypass audit
         run: |
-          cd backend
-          ES_ADDR=http://localhost:9200 PORT=8081 nohup go run ./cmd/server > /tmp/server.log 2>&1 &
+          ES_ADDR=http://localhost:9200 PORT=8081 /tmp/dstc-server > /tmp/server.log 2>&1 &
           echo $! > /tmp/server.pid
           for i in $(seq 1 30); do curl -sf http://localhost:8081/api/health && break; sleep 1; done
 
       - name: bypass audit (40 direct-API calls, every one must be rejected)
-        run: |
-          cd backend
-          go run ./cmd/bypassaudit http://localhost:8081
+        run: /tmp/dstc-bypassaudit http://localhost:8081
 
       - name: stop the bypass-audit backend
         # Playwright's own webServer starts a fresh instance below; running
         # both at once would fight over port 8081.
-        run: kill "$(cat /tmp/server.pid)"
+        run: |
+          kill "$(cat /tmp/server.pid)"
+          for i in $(seq 1 10); do curl -sf http://localhost:8081/api/health || break; sleep 1; done
 
       - name: build frontend and run Playwright E2E against the real backend
         working-directory: frontend
