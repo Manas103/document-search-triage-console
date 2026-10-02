@@ -1,0 +1,24 @@
+# Runs once after the release installs: generates the synthetic corpus and
+# bulk-indexes it into the Elasticsearch this same release just created.
+# This is what makes "helm install" alone end with a searchable cluster.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-loader
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: loader
+          image: {{ .Values.loader.image }}
+          env:
+            - name: ES_ADDR
+              value: "http://{{ .Release.Name }}-elasticsearch:9200"
+            - name: DOC_COUNT
+              value: {{ .Values.loader.docCount | quote }}

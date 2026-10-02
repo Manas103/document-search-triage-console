@@ -1,0 +1,27 @@
+=== helm install ===
+(see full output above; status: deployed)
+
+=== kubectl get pods ===
+NAME                                  READY   STATUS      RESTARTS   AGE
+dstc-backend-5b8cbf8d9c-hpn6b         1/1     Running     0          87s
+dstc-elasticsearch-756b9fc5cc-txbhg   1/1     Running     0          87s
+dstc-frontend-54944cd5bc-f9dnp        1/1     Running     0          87s
+dstc-loader-ms7np                     0/1     Completed   0          25s
+
+=== kubectl get jobs ===
+NAME          STATUS     COMPLETIONS   DURATION   AGE
+dstc-loader   Complete   1/1           5s         25s
+
+=== GET /api/health via NodePort 30081 ===
+{"ok":true}
+
+=== POST /api/session (analyst1) ===
+{"token":"bec65d94dc323c68b159d32718873c554dfbfd22f7153a87"}
+
+
+=== GET / via frontend NodePort 30080 ===
+HTTP 200
+
+=== helm list ===
+NAME	NAMESPACE	REVISION	UPDATED                              	STATUS  	CHART                               	APP VERSION
+dstc	default  	1       	2026-10-02 15:08:41.3241119 -0400 EDT	deployed	document-search-triage-console-0.1.0	0.1.0      

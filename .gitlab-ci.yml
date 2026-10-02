@@ -1,0 +1,54 @@
+# Designed for GitLab specifically, because that is what this requisition
+# names. This machine has no GitLab account, only a GitHub account via the
+# `gh` CLI; .github/workflows/ci.yml runs the equivalent gates for real on
+# every push, and that substitution is disclosed in the README rather than
+# silently claimed. This file is not run anywhere; it is the pipeline as it
+# would exist on GitLab, kept in sync with ci.yml by hand.
+
+stages:
+  - test
+  - build
+  - deploy
+
+backend-tests:
+  stage: test
+  image: golang:1.23-bookworm
+  script:
+    - cd backend
+    - go vet ./...
+    - go test ./... -v
+
+frontend-build:
+  stage: test
+  image: node:22-bookworm
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build
+
+build-images:
+  stage: build
+  image: docker:27
+  services:
+    - docker:27-dind
+  script:
+    - docker build -f deploy/Dockerfile.backend -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA .
+    - docker build -f deploy/Dockerfile.frontend -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA .
+    - docker build -f deploy/Dockerfile.loader -t $CI_REGISTRY_IMAGE/loader:$CI_COMMIT_SHORT_SHA .
+    - docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE/loader:$CI_COMMIT_SHORT_SHA
+
+deploy-to-cluster:
+  stage: deploy
+  image: alpine/helm:3.16.2
+  script:
+    - helm upgrade --install dstc ./deploy/helm/document-search-triage-console
+        --set backend.image=$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+        --set frontend.image=$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
+        --set loader.image=$CI_REGISTRY_IMAGE/loader:$CI_COMMIT_SHORT_SHA
+        --wait --timeout 5m
+  environment:
+    name: production
+  only:
+    - master

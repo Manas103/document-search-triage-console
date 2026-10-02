@@ -1,0 +1,32 @@
+backend:
+  image: document-search-triage-console-backend:dev
+  pullPolicy: IfNotPresent
+  port: 8080
+  service:
+    type: NodePort
+    nodePort: 30081
+  # Reachable from a browser running outside the cluster, not just from
+  # other pods. For a kind cluster with the matching extraPortMappings (see
+  # deploy/kind-cluster.yaml) this is the one address that actually works;
+  # a real deployment would put a proper Ingress/TLS front end here instead.
+  externalBase: "http://localhost:30081"
+
+frontend:
+  image: document-search-triage-console-frontend:dev
+  pullPolicy: IfNotPresent
+  port: 80
+  service:
+    type: NodePort
+    nodePort: 30080
+
+elasticsearch:
+  image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+  port: 9200
+  heapSize: 512m
+
+loader:
+  image: document-search-triage-console-loader:dev
+  # Kept small by default so `helm install` finishes quickly in CI; the
+  # README's own measured numbers come from a separately run 1,200,000-
+  # document load on the build machine, not from this CI-sized fixture.
+  docCount: "20000"

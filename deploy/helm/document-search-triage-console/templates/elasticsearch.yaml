@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-elasticsearch
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-elasticsearch
+    spec:
+      containers:
+        - name: elasticsearch
+          image: {{ .Values.elasticsearch.image }}
+          env:
+            - name: discovery.type
+              value: single-node
+            - name: xpack.security.enabled
+              value: "false"
+            - name: ES_JAVA_OPTS
+              value: "-Xms{{ .Values.elasticsearch.heapSize }} -Xmx{{ .Values.elasticsearch.heapSize }}"
+          ports:
+            - containerPort: 9200
+          readinessProbe:
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            failureThreshold: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-elasticsearch
+spec:
+  selector:
+    app: {{ .Release.Name }}-elasticsearch
+  ports:
+    - port: 9200
+      targetPort: 9200

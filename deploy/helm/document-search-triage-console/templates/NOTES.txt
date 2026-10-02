@@ -1,0 +1,6 @@
+Console: http://localhost:{{ .Values.frontend.service.nodePort }}
+API:     {{ .Values.backend.externalBase }}
+
+The loader Job ({{ .Release.Name }}-loader) generates and indexes the
+synthetic corpus; `kubectl get jobs` until it shows Complete before the
+console has anything to search.

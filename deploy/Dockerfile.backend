@@ -1,0 +1,15 @@
+# Multi-stage build: compile the Go REST service, then ship only the
+# static binary. No local Go toolchain is required to produce this image;
+# `docker build` pulls the golang image itself.
+FROM golang:1.23-bookworm AS build
+WORKDIR /src
+COPY backend/go.mod backend/go.sum ./
+RUN go mod download
+COPY backend/ ./
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/server ./cmd/server
+
+FROM gcr.io/distroless/static-debian12
+COPY --from=build /out/server /server
+ENV PORT=8080
+EXPOSE 8080
+ENTRYPOINT ["/server"]

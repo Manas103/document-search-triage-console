@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Document Search and Triage Console</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <!-- Overwritten by deploy/docker-entrypoint.sh at container start from the
+       API_BASE environment variable; defaults to the local backend port. -->
+  <script>window.__API_BASE__ = window.__API_BASE__ || "http://localhost:8081";</script>
+  <app-root></app-root>
+</body>
+</html>

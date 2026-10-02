@@ -1,0 +1,8 @@
+
+Running 3 tests using 1 worker
+
+  ok 1 tests\console.spec.ts:7:5 › analyst can search, drill down, and advance a document one step (497ms)
+  ok 2 tests\console.spec.ts:26:5 › analyst cannot search a RESTRICTED classification from the UI either (223ms)
+  ok 3 tests\console.spec.ts:36:5 › supervisor can close a flagged document that an analyst cannot (577ms)
+
+  3 passed (2.2s)

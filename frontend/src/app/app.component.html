@@ -1,0 +1,64 @@
+<main class="shell">
+  <h1>Document Search and Triage Console</h1>
+
+  <section *ngIf="!api.token" class="login">
+    <p>Demo accounts: <code>analyst1</code>, <code>analyst2</code> (ANALYST), <code>supervisor1</code> (SUPERVISOR).</p>
+    <input [(ngModel)]="usernameInput" placeholder="username" (keyup.enter)="login()" />
+    <button (click)="login()">Log in</button>
+    <p class="error" *ngIf="loginError">{{ loginError }}</p>
+  </section>
+
+  <section *ngIf="api.token" class="session-bar">
+    <span>Signed in as <strong>{{ api.username }}</strong> ({{ api.role }})</span>
+    <button (click)="logout()">Log out</button>
+  </section>
+
+  <section *ngIf="api.token" class="search-panel">
+    <input [(ngModel)]="queryText" placeholder="free text" (keyup.enter)="search()" />
+    <select [(ngModel)]="category"><option value="">any category</option><option *ngFor="let c of categories" [value]="c">{{ c }}</option></select>
+    <select [(ngModel)]="region"><option value="">any region</option><option *ngFor="let r of regions" [value]="r">{{ r }}</option></select>
+    <select [(ngModel)]="priority"><option value="">any priority</option><option *ngFor="let p of priorities" [value]="p">{{ p }}</option></select>
+    <select [(ngModel)]="sourceType"><option value="">any source</option><option *ngFor="let s of sourceTypes" [value]="s">{{ s }}</option></select>
+    <select [(ngModel)]="classification"><option value="">any classification</option><option *ngFor="let c of classifications" [value]="c">{{ c }}</option></select>
+    <select [(ngModel)]="status"><option value="">any status</option><option *ngFor="let s of statuses" [value]="s">{{ s }}</option></select>
+    <button (click)="search()" [disabled]="searching">{{ searching ? 'Searching...' : 'Search' }}</button>
+    <p class="error" *ngIf="searchError">{{ searchError }}</p>
+  </section>
+
+  <section *ngIf="api.token" class="results">
+    <p class="total" *ngIf="results.length">{{ total }} total match(es); showing {{ results.length }}.</p>
+    <table *ngIf="results.length">
+      <thead><tr><th>Title</th><th>Category</th><th>Priority</th><th>Classification</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr *ngFor="let d of results">
+          <td>{{ d.title }}</td>
+          <td>{{ d.category }}</td>
+          <td>{{ d.priority }}</td>
+          <td>{{ d.classification }}</td>
+          <td>{{ d.status }}</td>
+          <td><button (click)="open(d)">Drill down</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section *ngIf="selected" class="detail" data-testid="detail-panel">
+    <h2>{{ selected.title }}</h2>
+    <dl>
+      <dt>Document id</dt><dd>{{ selected.id }}</dd>
+      <dt>Category</dt><dd>{{ selected.category }}</dd>
+      <dt>Region</dt><dd>{{ selected.region }}</dd>
+      <dt>Priority</dt><dd>{{ selected.priority }}</dd>
+      <dt>Source type</dt><dd>{{ selected.source_type }}</dd>
+      <dt>Classification</dt><dd>{{ selected.classification }}</dd>
+      <dt>Status</dt><dd data-testid="detail-status">{{ selected.status }}</dd>
+      <dt>Created</dt><dd>{{ selected.created_date }}</dd>
+      <dt>Body</dt><dd>{{ selected.body }}</dd>
+    </dl>
+    <button *ngIf="nextStatus() as next" (click)="advance()" [disabled]="triageBusy" data-testid="advance-button">
+      {{ triageBusy ? 'Updating...' : 'Move to ' + next }}
+    </button>
+    <p *ngIf="!nextStatus()">No further triage action is available to this role for this document.</p>
+    <p class="error" *ngIf="triageError" data-testid="triage-error">{{ triageError }}</p>
+  </section>
+</main>

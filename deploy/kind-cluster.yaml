@@ -1,0 +1,12 @@
+# A single-node kind cluster with the two NodePorts the Helm chart uses
+# mapped to the host, so a browser on the host machine (not just pods
+# inside the cluster) can reach both the console and the API directly.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+      - containerPort: 30081
+        hostPort: 30081

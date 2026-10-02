@@ -1,0 +1,16 @@
+# The post-install Job image: generates the synthetic corpus and indexes
+# it into the Elasticsearch release this chart just stood up. Bundles the
+# Go indexer binary and the Python generator in one small image so `helm
+# install` alone is enough to end with a searchable cluster, not just an
+# empty index.
+FROM golang:1.23-bookworm AS buildgo
+WORKDIR /src
+COPY backend/go.mod backend/go.sum ./
+RUN go mod download
+COPY backend/ ./
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/indexer ./cmd/indexer
+
+FROM python:3.12-slim
+COPY --from=buildgo /out/indexer /usr/local/bin/indexer
+COPY data/gen/generate_documents.py /opt/generate_documents.py
+ENTRYPOINT ["/bin/sh", "-c", "python3 /opt/generate_documents.py \"${DOC_COUNT:-1200000}\" /tmp/documents.ndjson && indexer /tmp/documents.ndjson \"${ES_ADDR}\""]

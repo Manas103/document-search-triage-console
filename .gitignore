@@ -1,0 +1,23 @@
+# Synthetic corpus, regenerated with:
+#   python data/gen/generate_documents.py 1200000 data/documents.ndjson
+data/documents.ndjson
+
+# Go
+backend/bin/
+*.exe
+*.test
+
+# Node / Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/test-results/
+frontend/playwright-report/
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE / OS
+.vscode/
+.DS_Store

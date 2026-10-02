@@ -1,0 +1,1 @@
+﻿[bench] INDEXED LATENCY n=500 mean=6.776066ms p50=6.517877ms p95=9.456812ms max=31.038696ms

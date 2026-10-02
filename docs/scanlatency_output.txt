@@ -1,0 +1,7 @@
+﻿[scanlatency] iteration=1 matched=3 elapsed=7.032119308s
+[scanlatency] iteration=2 matched=45 elapsed=6.293174408s
+[scanlatency] iteration=3 matched=247 elapsed=5.861908663s
+[scanlatency] iteration=4 matched=13 elapsed=6.240550852s
+[scanlatency] iteration=5 matched=43 elapsed=6.271704486s
+[scanlatency] iteration=6 matched=18 elapsed=6.8462143s
+[scanlatency] DONE n=6 mean=6.424278669s min=5.861908663s max=7.032119308s
