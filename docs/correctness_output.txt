@@ -1,0 +1,30 @@
+1,000-query correctness sweep: oracle (uncached full-file scan) vs. the real indexed API.
+
+Attempt 1 (size=1000 requested from the API): produced repeated false "mismatches"
+where oracle_n was consistently greater than api_n, always at exactly 200. Root
+cause: internal/es.Client.Search clamps any requested size over 500 back down to
+the default of 200. Fixed by requesting the API's actual maximum, 500 (see
+README Findings and cmd/oracle/main.go's apiSearch comment).
+
+Attempt 2 (after the fix), this session, before an environment restart
+interrupted the process:
+
+[correctness] 100/1000 done, matched=100 mismatched=0, 564.3s elapsed
+[correctness] 200/1000 done, matched=200 mismatched=0, 1145.2s elapsed
+[correctness] 300/1000 done, matched=300 mismatched=0, 1758.0s elapsed
+[process interrupted by environment restart, not by a measurement failure]
+
+Attempt 2 (continued), relaunched as a detached process (WSL PID 98722) against
+the same live 1,200,000-document index, to run to completion independently of
+this interactive session:
+
+[in progress at report time; see /tmp/correctness_final.log on the build
+machine for the live tail, or rerun:
+  go run ./cmd/oracle correctness data/documents.ndjson http://localhost:8081 <token> 1000
+]
+
+Every query run by the corrected tool, across both the interrupted and the
+resumed sweep, has matched the oracle exactly. The full 1,000-query tally is
+not yet available; this file reports what was actually measured rather than
+asserting 1,000/1,000 without having measured it. See build_report.json's
+"correctness_sweep" benchmark note for the same account.
